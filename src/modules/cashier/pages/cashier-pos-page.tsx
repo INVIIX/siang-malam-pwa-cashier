@@ -152,9 +152,13 @@ export default function CashierPosPage() {
                     //     encodeReceipt(invoice, user?.department?.name ?? "RM. Siang Malam", user?.branch?.name ?? "-")
                     // )
 
-                    printRaw(
-                        encodeReceipt(invoice, user?.department?.name ?? "RM. Siang Malam", user?.branch?.name ?? "-")
+                    let encodedReceipt: Object = encodeReceipt(
+                        invoice,
+                        user?.department?.name ?? "RM. Siang Malam",
+                        user?.branch?.name ?? "-"
                     )
+                    let encodedValues = Object.values(encodedReceipt)
+                    printRaw(encodedValues)
                 }
             }
         } catch (err) {

@@ -4,11 +4,11 @@ const localhostApiClient = axios.create({
     baseURL: "http://localhost:8080",
 })
 
-export function printRaw(data: number[]) {
+export function printRaw(commands: number[]) {
     return localhostApiClient.post(
         "/printraw",
         {
-            commands: data,
+            commands: commands,
             deviceAddress: "",
         },
         {

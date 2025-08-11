@@ -26,7 +26,6 @@ const textContent = (text: string | number, length: number, align: TAlign = 'lef
     return result
 }
 
-
 export const previewReceipt = (invoice: TInvoice, storeName: string = "RM. Siang Malam", branchName: string = "-") => {
     const tHead = [
         [textContent('Items', 35), textContent('Total', 12, 'right')]
