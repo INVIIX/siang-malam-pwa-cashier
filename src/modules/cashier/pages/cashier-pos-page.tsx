@@ -121,21 +121,33 @@ export default function CashierPosPage() {
         }
     }, [invoice, watchedPayments, formPayment])
 
-    // check android service status when opening invoice
-    useEffect(() => {
+    async function checkAndroidService() {
         try {
-            async function checkAndroidService() {
-                const androidStatusResponse = await checkServiceStatus()
-                if (androidStatusResponse.status === 200) {
-                    const body: TStatusResponse = androidStatusResponse.data
-                    setAndroidServiceActive(body.customerDisplay && body.printer)
+            const androidStatusResponse = await checkServiceStatus()
+            if (androidStatusResponse.status === 200) {
+                const body: TStatusResponse = androidStatusResponse.data
+                const isActive = body.customerDisplay && body.printer
+                setAndroidServiceActive(isActive)
+
+                if (isActive) {
+                    toast.success("Android service aktif")
                 } else {
-                    setAndroidServiceActive(false)
+                    toast.warning("Android service tidak aktif")
                 }
+            } else {
+                setAndroidServiceActive(false)
+                toast.warning("Android service tidak aktif")
             }
         } catch (error) {
-            console.error("Android service is not running:", error)
             setAndroidServiceActive(false)
+            toast.warning("Android service tidak aktif")
+        }
+    }
+
+    // check android service status when opening invoice
+    useEffect(() => {
+        if (invoice) {
+            checkAndroidService()
         }
     }, [invoice])
 
@@ -225,33 +237,6 @@ export default function CashierPosPage() {
                                         {preview && <pre className="text-[clamp(0.2rem,1vw,1rem)]">{preview}</pre>}
                                     </div>
                                 </CardContent>
-                                <CardFooter className="border-t">
-                                    {/* 
-                                    JSPM Printer Selection
-
-                                    <Select
-                                        value={selectedPrinter}
-                                        onValueChange={(value) => {
-                                            changePrinter(value)
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select a fruit" />
-                                        </SelectTrigger>
-                                        <SelectContent className="w-full">
-                                            <SelectGroup>
-                                                <SelectLabel>Fruits</SelectLabel>
-                                                {printers?.map((printer: any, key: number) => {
-                                                    return (
-                                                        <SelectItem key={key} value={printer.name}>
-                                                            {printer.name}
-                                                        </SelectItem>
-                                                    )
-                                                })}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select> */}
-                                </CardFooter>
                             </Card>
                             <Card className="w-full py-3">
                                 <CardHeader className="border-b-1 pb-1">
@@ -419,11 +404,13 @@ export default function CashierPosPage() {
                                                                     if (isActive) {
                                                                         toast.success("Service aktif")
                                                                     } else {
-                                                                        toast.warn("Service belum aktif")
+                                                                        toast.warning(
+                                                                            "Service belum aktif, periksa lagi"
+                                                                        )
                                                                     }
                                                                 } catch {
                                                                     setAndroidServiceActive(false)
-                                                                    toast.warn("Service belum aktif")
+                                                                    toast.warning("Service belum aktif, periksa lagi")
                                                                 }
                                                             }}
                                                         >
