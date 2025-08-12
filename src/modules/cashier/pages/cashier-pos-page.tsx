@@ -29,9 +29,10 @@ import { z } from "zod/v4"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { InputCurrency } from "@/components/commons/input-currency"
 import { useAuth } from "@/modules/auth/components/context/auth-context"
-import { printRaw, setCustomerDisplay } from "@/lib/apiClientAndroid"
+import { checkServiceStatus, printRaw, setCustomerDisplay } from "@/lib/apiClientAndroid"
 import { generateIdleHtml, generateInvoiceHtml } from "@/lib/customerDisplay"
 import { makeQrSvg } from "@/lib/qr"
+import { TStatusResponse } from "@/types/android-api-resources"
 
 const paymentSchema = z.object({
     note: z.string(),
@@ -62,6 +63,7 @@ export default function CashierPosPage() {
     const { user } = useAuth()
     // const { printers, selectedPrinter, changePrinter, printCommand } = useJSPM()
 
+    const [androidServiceActive, setAndroidServiceActive] = useState(false)
     const [invoice, setInvoice] = useState<TInvoice>()
     const [preview, setPreview] = useState<string | null>(null)
     const [search, setSearch] = useState<string>("")
@@ -112,11 +114,33 @@ export default function CashierPosPage() {
         formPayment.setValue("change.amount", changeAmount)
 
         if (invoice) {
-            setPreview(previewReceipt(invoice))
+            var receiptPreview = previewReceipt(invoice)
+            setPreview(receiptPreview)
+        } else {
+            setPreview(null)
         }
     }, [invoice, watchedPayments, formPayment])
 
+    // check android service status when opening invoice
     useEffect(() => {
+        try {
+            async function checkAndroidService() {
+                const androidStatusResponse = await checkServiceStatus()
+                if (androidStatusResponse.status === 200) {
+                    const body: TStatusResponse = androidStatusResponse.data
+                    setAndroidServiceActive(body.customerDisplay && body.printer)
+                } else {
+                    setAndroidServiceActive(false)
+                }
+            }
+        } catch (error) {
+            console.error("Android service is not running:", error)
+            setAndroidServiceActive(false)
+        }
+    }, [invoice])
+
+    useEffect(() => {
+        console.log("Preview changed:", preview)
         displayPreviewToCustomer()
     }, [preview])
 
@@ -369,6 +393,45 @@ export default function CashierPosPage() {
                                                     Tutup
                                                 </Button>
                                             </div>
+
+                                            {!androidServiceActive && (
+                                                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                                                            <span className="text-sm text-yellow-800">
+                                                                Fitur printer & front display tidak aktif. pastikan
+                                                                aplikasi "SiangMalam Service" berjalan.
+                                                            </span>
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const response = await checkServiceStatus()
+                                                                    const isActive =
+                                                                        response.status === 200 &&
+                                                                        response.data.customerDisplay &&
+                                                                        response.data.printer
+                                                                    setAndroidServiceActive(isActive)
+                                                                    if (isActive) {
+                                                                        toast.success("Service aktif")
+                                                                    } else {
+                                                                        toast.warn("Service belum aktif")
+                                                                    }
+                                                                } catch {
+                                                                    setAndroidServiceActive(false)
+                                                                    toast.warn("Service belum aktif")
+                                                                }
+                                                            }}
+                                                        >
+                                                            Periksa Ulang
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </form>
                                     </Form>
                                 </CardContent>

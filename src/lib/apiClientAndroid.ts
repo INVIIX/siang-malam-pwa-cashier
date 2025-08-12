@@ -4,6 +4,10 @@ const localhostApiClient = axios.create({
     baseURL: "http://localhost:8080",
 })
 
+export function checkServiceStatus() {
+    return localhostApiClient.get("/status")
+}
+
 export function printRaw(commands: number[]) {
     return localhostApiClient.post(
         "/printraw",
@@ -27,10 +31,7 @@ export function setCustomerDisplay(html: string) {
     })
 }
 
-export function testPrinterRaw() {
-    return localhostApiClient.get("/testprintraw")
-}
-
+// Testing functions
 export function testPrinter() {
     return localhostApiClient
         .get("/testprint")
@@ -40,4 +41,8 @@ export function testPrinter() {
         .catch((error) => {
             console.error("Printer test failed:", error)
         })
+}
+
+export function testPrinterRaw() {
+    return localhostApiClient.get("/testprintraw")
 }
