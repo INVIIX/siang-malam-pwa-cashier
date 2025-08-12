@@ -4,7 +4,7 @@ import apiClient from "@/lib/apiClient"
 import { money } from "@/lib/utils"
 import { TInvoice } from "@/modules/cart/helpers/cart-utils"
 import { useQuery } from "@tanstack/react-query"
-import { PlusCircleIcon, XCircleIcon } from "lucide-react"
+import { PlusCircleIcon, SearchIcon, XCircleIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -110,14 +110,26 @@ export default function CashierPosPage() {
         const invoiceTotal = invoice?.grand_total ?? 0
         const changeAmount = Math.max(totalPaid - invoiceTotal, 0)
         formPayment.setValue("change.amount", changeAmount)
-        invoice && setPreview(previewReceipt(invoice))
 
-        async function displayPreview() {
-            const qrSvg = await makeQrSvg(user?.department.qris ?? "12345678")
-            preview && setCustomerDisplay(generateInvoiceHtml(preview, qrSvg))
+        if (invoice) {
+            setPreview(previewReceipt(invoice))
         }
-        displayPreview()
     }, [invoice, watchedPayments, formPayment])
+
+    useEffect(() => {
+        displayPreviewToCustomer()
+    }, [preview])
+
+    async function displayPreviewToCustomer() {
+        if (invoice && preview) {
+            const qrSvg = await makeQrSvg(user?.department.qris ?? "12345678")
+            const invoiceHtml = generateInvoiceHtml(preview, qrSvg)
+            setCustomerDisplay(invoiceHtml)
+        } else {
+            const idleHtml = generateIdleHtml()
+            setCustomerDisplay(idleHtml)
+        }
+    }
 
     const closeForm = () => {
         setInvoice(undefined)
@@ -147,18 +159,19 @@ export default function CashierPosPage() {
                 closeForm()
 
                 if (invoice) {
-                    // Print implementation changed:
-                    // printCommand(
-                    //     encodeReceipt(invoice, user?.department?.name ?? "RM. Siang Malam", user?.branch?.name ?? "-")
-                    // )
-
                     let encodedReceipt: Object = encodeReceipt(
                         invoice,
                         user?.department?.name ?? "RM. Siang Malam",
                         user?.branch?.name ?? "-"
                     )
-                    let encodedValues = Object.values(encodedReceipt)
-                    printRaw(encodedValues)
+                    let ESCPOSByteArray = Object.values(encodedReceipt)
+
+                    try {
+                        printRaw(ESCPOSByteArray)
+                    } catch (error) {
+                        console.error("Error printing receipt:", error)
+                        toast.error("Gagal mencetak nota")
+                    }
                 }
             }
         } catch (err) {
@@ -179,13 +192,13 @@ export default function CashierPosPage() {
                 <div className="grid grid-cols-2 gap-4">
                     {invoice ? (
                         <>
-                            <Card className="w-full">
-                                <CardHeader className="border-b">
+                            <Card className="w-full py-3">
+                                <CardHeader className="border-b-1 pb-1">
                                     <CardTitle className="text-center">Nota Tagihan</CardTitle>
                                 </CardHeader>
                                 <CardContent className="grid gap-4">
-                                    <div className="max-w-full mx-auto overflow-x-auto">
-                                        {preview && <pre className="whitespace-pre-wrap break-words">{preview}</pre>}
+                                    <div className="text-center w-full mx-auto overflow-x-auto ">
+                                        {preview && <pre className="text-[clamp(0.2rem,1vw,1rem)]">{preview}</pre>}
                                     </div>
                                 </CardContent>
                                 <CardFooter className="border-t">
@@ -216,8 +229,8 @@ export default function CashierPosPage() {
                                     </Select> */}
                                 </CardFooter>
                             </Card>
-                            <Card className="w-full">
-                                <CardHeader className="border-b">
+                            <Card className="w-full py-3">
+                                <CardHeader className="border-b-1 pb-1">
                                     <CardTitle className="text-center">Pembayaran</CardTitle>
                                 </CardHeader>
                                 <CardContent className="grid gap-4">
@@ -230,7 +243,7 @@ export default function CashierPosPage() {
                                                             control={control}
                                                             name={`payments.${index}.method`}
                                                             render={({ field }) => (
-                                                                <FormItem className="w-full">
+                                                                <FormItem className="basis-1/5">
                                                                     <FormControl>
                                                                         <Select
                                                                             defaultValue="cash"
@@ -307,19 +320,32 @@ export default function CashierPosPage() {
                                                     </div>
                                                 )
                                             })}
-                                            <div className="flex justify-end items-center gap-2">
-                                                <div className="w-full text-right">Kembalian:</div>
+
+                                            <div className="flex place-content-center gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="link"
+                                                    color="orange"
+                                                    className="w-fit px-4 my-0 cursor-pointer"
+                                                    onClick={() => paymentArray.append(defaultPayment)}
+                                                >
+                                                    <PlusCircleIcon />
+                                                    Tambah Pembayaran
+                                                </Button>
+                                            </div>
+
+                                            <div className="mt-4 flex justify-end items-center gap-2">
+                                                <p className="">Kembalian: </p>
                                                 <FormField
                                                     control={control}
                                                     name={`change.amount`}
                                                     render={({ field }) => (
-                                                        <FormItem className="w-full">
+                                                        <FormItem className="grow">
                                                             <FormControl>
                                                                 <InputCurrency
                                                                     value={field.value ?? 0}
                                                                     onChange={field.onChange}
                                                                     placeholder="Nominal"
-                                                                    className="text-right"
                                                                     readOnly={true}
                                                                 />
                                                             </FormControl>
@@ -327,18 +353,19 @@ export default function CashierPosPage() {
                                                         </FormItem>
                                                     )}
                                                 />
+                                            </div>
+
+                                            <div className="flex flex-col justify-end gap-2">
+                                                <ButtonSubmit
+                                                    loading={isSubmitting}
+                                                    children={"Konfirmasi Pembayaran"}
+                                                />
                                                 <Button
                                                     type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => paymentArray.append(defaultPayment)}
+                                                    variant="outline"
+                                                    color="orange"
+                                                    onClick={() => closeForm()}
                                                 >
-                                                    <PlusCircleIcon />
-                                                </Button>
-                                            </div>
-                                            <div className="flex justify-end gap-2">
-                                                <ButtonSubmit loading={isSubmitting} />
-                                                <Button type="button" variant="outline" onClick={() => closeForm()}>
                                                     Tutup
                                                 </Button>
                                             </div>
@@ -353,7 +380,15 @@ export default function CashierPosPage() {
                                 <div className="flex w-full items-center justify-between">
                                     <div className="text-foreground text-base font-medium">Tagihan Masuk</div>
                                 </div>
-                                <Input type="search" className="w-full" onChange={(e) => setSearch(e.target.value)} />
+                                <div className="relative">
+                                    <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Cari..."
+                                        type="search"
+                                        className="w-full pl-10"
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
                             </div>
                             <div className="w-full grid gap-2">
                                 {invoicesQuery.data &&

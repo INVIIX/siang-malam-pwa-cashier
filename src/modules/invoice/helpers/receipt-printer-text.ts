@@ -14,10 +14,11 @@ const textContent = (text: string | number, length: number, align: TAlign = 'lef
         case 'right':
             result = str.padStart(length, " ")
             break;
-        case 'center':
+        case 'center': {
             const sisa = length - str.length;
             result = " ".padStart((sisa / 2), " ") + str + " ".padEnd((sisa / 2))
             break;
+        }
         case 'left':
         default:
             result = str.padEnd(length, " ")
