@@ -27,6 +27,10 @@ export function setCustomerDisplay(html: string) {
     })
 }
 
+export function testPrinterRaw() {
+    return localhostApiClient.get("/testprintraw")
+}
+
 export function testPrinter() {
     return localhostApiClient
         .get("/testprint")

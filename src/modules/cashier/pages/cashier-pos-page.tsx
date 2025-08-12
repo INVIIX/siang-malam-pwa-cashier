@@ -29,7 +29,7 @@ import { z } from "zod/v4"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { InputCurrency } from "@/components/commons/input-currency"
 import { useAuth } from "@/modules/auth/components/context/auth-context"
-import { printRaw, setCustomerDisplay } from "@/lib/androidService"
+import { printRaw, setCustomerDisplay } from "@/lib/apiClientAndroid"
 import { generateIdleHtml, generateInvoiceHtml } from "@/lib/customerDisplay"
 import { makeQrSvg } from "@/lib/qr"
 
