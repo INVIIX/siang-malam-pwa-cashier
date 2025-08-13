@@ -22,7 +22,6 @@ const CashierDisplayPage = lazy(() => import('./modules/cashier/pages/cashier-di
 const InvoiceIndexPage = lazy(() => import('./modules/invoice/pages/invoice-index-page.tsx'));
 const InvoiceDetailPage = lazy(() => import('./modules/invoice/pages/invoice-detail-page.tsx'));
 const queryClient = new QueryClient();
-
 export default function App() {
     const { user } = useAuth()
     const socket = echo;

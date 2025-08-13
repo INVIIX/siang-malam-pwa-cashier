@@ -19,6 +19,8 @@ export type TBranch = {
 export type TDepartment = {
     id: number;
     name: string;
+    retail?: boolean;
+    qris?: string;
 }
 
 export type TUser = {

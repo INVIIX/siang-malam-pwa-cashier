@@ -23,7 +23,7 @@ export type TArea = {
 export type TTable = {
     id: number | null;
     number: number | null;
-    area: TArea
+    area?: TArea
 }
 
 export type TCartItem = {

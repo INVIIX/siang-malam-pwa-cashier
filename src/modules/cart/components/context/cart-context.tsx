@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { useLocalStorage } from "react-use"
 import { toast } from "sonner"
-import { findCartItemMatchingIndex, TCart, TCartItem, TTable } from "../../helpers/cart-utils"
+import { TCart, TCartItem, TTable } from "../../types/cart"
+import { findCartItemMatchingIndex } from "../../lib/unique-cart-item"
 
 export type TCartProvider = {
     cart: TCart,
@@ -10,14 +11,20 @@ export type TCartProvider = {
     updateItem: (item: TCartItem) => void,
     clearItems: () => void,
     cartItemsCount: number;
-    cartTotalAmount: number;
 }
 
-const defaultcart = {
+const defaultcart: TCart = {
     id: 0,
-    table: { id: null, number: null },
-    items: []
-} as TCart
+    table: {
+        id: null,
+        number: null,
+    },
+    items: [],
+    total_items: 0,
+    total_discounts: 0,
+    total_taxes: 0,
+    grand_total: 0,
+}
 
 const initialState: TCartProvider = {
     cart: defaultcart,
@@ -26,7 +33,6 @@ const initialState: TCartProvider = {
     updateItem: () => { },
     clearItems: () => { },
     cartItemsCount: 0,
-    cartTotalAmount: 0,
 }
 
 const CartProviderContext = createContext<TCartProvider>(initialState)
@@ -42,7 +48,6 @@ export function CartProvider({
     const [tables] = useLocalStorage<TTable[]>('tables', []);
     const [carts, setCarts] = useLocalStorage<TCart[]>('carts', []);
     const [cart, setCart] = useState<TCart>(defaultcart);
-    const [cartTotalAmount, setCartTotalAmount] = useState<number>(0);
     const [cartItemsCount, setCartItemsCount] = useState<number>(0);
 
     const getCart = (id: number) => {
@@ -83,14 +88,8 @@ export function CartProvider({
             cartsData[cartIndex] = cart;
             setCarts(cartsData)
         }
-
-        let count = cart?.items.length ?? 0;
-        let cartTotalAmount = (cart?.items && cart?.items.reduce(function (current, item) {
-            return current + (item.price * item.quantity)
-        }, 0)) ?? 0;
-
-        setCartItemsCount(count)
-        setCartTotalAmount(cartTotalAmount)
+        const countItems = cart.items.length ?? 0;
+        setCartItemsCount(countItems);
     }, [cart])
 
     const storeItem = (list: TCartItem[], item: TCartItem, index: number) => {
@@ -99,45 +98,70 @@ export function CartProvider({
         } else {
             list[index] = item;
         }
-        const newCart = { ...cart, ...{ items: list } };
+        const newCart = {
+            ...cart, ...{
+                items: list,
+                total_items: list.reduce((sum, item) => sum + (item.quantity * item.default_price), 0),
+                total_discounts: 0,
+                total_taxes: list.reduce((sum, item) => sum + (item.quantity * item.default_price_total_tax), 0),
+                grand_total: list.reduce((sum, item) => sum + (item.quantity * item.default_price_with_tax), 0),
+            }
+        };
         setCart(newCart)
     }
 
     const destroyItem = (list: TCartItem[], index: number) => {
         list.splice(index, 1);
-        setCart({ ...cart, ...{ items: list } });
+        const newCart = {
+            ...cart, ...{
+                items: list,
+                total_items: list.reduce((sum, item) => sum + (item.quantity * item.default_price), 0),
+                total_discounts: 0,
+                total_taxes: list.reduce((sum, item) => sum + (item.quantity * item.default_price_total_tax), 0),
+                grand_total: list.reduce((sum, item) => sum + (item.quantity * item.default_price_with_tax), 0),
+            }
+        };
+        setCart(newCart);
     }
 
     const addItem = (item: TCartItem) => {
         const list = cart.items || [];
         const index = findCartItemMatchingIndex(item, list);
         const existing = list[index];
-        let message = `${item.name} telah ditambahkan ${(existing ? 'lagi ' : '')}sebanyak ${item.quantity}`
+        //let message = `${item.name} telah ditambahkan ${(existing ? 'lagi ' : '')}sebanyak ${item.quantity}`
         item.options = Object.values(item.options || []).sort();
         item.quantity += existing?.quantity || 0;
         storeItem(list, item, index)
-        toast.success(message)
+        //toast.success(message)
     }
-
     const updateItem = (item: TCartItem) => {
         const list = cart.items || [];
         const index = findCartItemMatchingIndex(item, list);
-        let message = item.quantity > 0 ? `${item.name} telah diubah sebanyak ${item.quantity}` : `${item.name} telah dihapus`;
+        //let message = item.quantity > 0 ? `${item.name} telah diubah sebanyak ${item.quantity}` : `${item.name} telah dihapus`;
         if (item.quantity > 0) {
             item.options = Object.values(item.options || []).sort();
             storeItem(list, item, index)
-            toast.success(message)
+            //toast.success(message)
         } else {
             destroyItem(list, index)
-            toast.success(message)
+            //toast.success(message)
         }
     }
 
     const clearItems = () => {
-        setCart({ ...cart, ...{ items: [] } })
+        const newCart = {
+            ...cart, ...{
+                items: [],
+                total_items: 0,
+                total_discounts: 0,
+                total_taxes: 0,
+                grand_total: 0,
+            }
+        };
+        setCart(newCart);
     }
 
-    const value = { setCartId, cart, addItem, updateItem, clearItems, cartItemsCount, cartTotalAmount }
+    const value = { setCartId, cart, addItem, updateItem, clearItems, cartItemsCount }
 
     return (
         <CartProviderContext.Provider value={value}>

@@ -38,7 +38,7 @@ export function ProductList({ className, search, onAddItem }: ProductListProps) 
         };
     }, [bottomRef.current, hasNextPage]);
     return <>
-        <div className={cn("w-full h-full flex flex-col space-y-4", className)}>
+        <div className={cn("w-full h-full flex flex-col gap-4", className)}>
             {
                 data && data.pages.map((page) => {
                     const currentPage = page as TApiResponse;

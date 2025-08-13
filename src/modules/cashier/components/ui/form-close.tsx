@@ -61,7 +61,7 @@ export function FormCashierClose({
                         </FormItem>
                     )}
                 />
-                <ButtonSubmit loading={isSubmitting}>Buka</ButtonSubmit>
+                <ButtonSubmit loading={isSubmitting}>Tutup Sesi Kasir</ButtonSubmit>
             </div>
         </form>
     </Form>
