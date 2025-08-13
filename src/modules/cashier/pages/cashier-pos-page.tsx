@@ -7,13 +7,11 @@ import { useQuery } from "@tanstack/react-query"
 import { PlusCircleIcon, SearchIcon, XCircleIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
@@ -21,7 +19,6 @@ import { encodeReceipt, previewReceipt } from "@/modules/invoice/helpers/receipt
 import { toast } from "sonner"
 import { errorValidation } from "@/lib/error-validation"
 import { AxiosError } from "axios"
-import { useJSPM } from "@/modules/printer/components/context/jspm-context"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { useDebounce } from "@/hooks/use-debounce"
 import { ButtonSubmit } from "@/components/commons/button-submit"
@@ -61,12 +58,12 @@ export type TFormPayment = {
 
 export default function CashierPosPage() {
     const { user } = useAuth()
-    // const { printers, selectedPrinter, changePrinter, printCommand } = useJSPM()
 
     const [androidServiceActive, setAndroidServiceActive] = useState(false)
     const [invoice, setInvoice] = useState<TInvoice>()
     const [preview, setPreview] = useState<string | null>(null)
     const [search, setSearch] = useState<string>("")
+    
     const debouncedSearch = useDebounce(search, 300) // 500ms delay
     const invoicesQuery = useQuery<TInvoice[]>({
         queryKey: ["invoices", debouncedSearch],
