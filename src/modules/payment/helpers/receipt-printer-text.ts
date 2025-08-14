@@ -1,5 +1,5 @@
 import { money } from "@/lib/utils"
-import { TInvoice } from "@/modules/cart/helpers/cart-utils"
+import { TInvoice } from "@/modules/cart/lib/cart-utils"
 import ReceiptEncoder from "@point-of-sale/receipt-printer-encoder"
 import moment from "moment"
 
@@ -13,19 +13,18 @@ const textContent = (text: string | number, length: number, align: TAlign = "lef
     switch (align) {
         case "right":
             result = str.padStart(length, " ")
-            break;
-        case 'center':
-            const sisa = length - str.length;
-            result = " ".padStart((sisa / 2), " ") + str + " ".padEnd((sisa / 2))
-            break;
-        case 'left':
+            break
+        case "center":
+            const sisa = length - str.length
+            result = " ".padStart(sisa / 2, " ") + str + " ".padEnd(sisa / 2)
+            break
+        case "left":
         default:
             result = str.padEnd(length, " ")
             break
     }
     return result
 }
-
 
 export const previewReceipt = (invoice: TInvoice, storeName: string = "RM. Siang Malam", branchName: string = "-") => {
     const tHead = [[textContent("Items", 35), textContent("Total", 12, "right")]].map((tr) => tr.join(" "))

@@ -4,9 +4,9 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { useLocalStorage } from "react-use"
 import { findPrinters, printRaw } from "@/lib/apiClientAndroid"
 import { TPrinterDevice } from "@/types/android-api-resources"
-import { TInvoice } from "@/modules/cart/helpers/cart-utils"
-import { encodeReceipt } from "@/modules/invoice/helpers/receipt-printer-text"
+import { encodeReceipt } from "@/modules/payment/helpers/receipt-printer-text"
 import { toast } from "sonner"
+import { TInvoice } from "@/modules/cart/lib/cart-utils"
 
 type LocalPrinterContextType = {
     printers: TPrinterDevice[]

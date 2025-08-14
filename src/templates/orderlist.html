@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Daftar Pesanan</title>
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th,
+            td {
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                border-bottom: 1px solid #000;
+            }
+            tfoot td {
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <h3>Pesanan</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Items</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="items-container">
+                <!-- {{items}} -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">Total</td>
+                    <td id="total-harga"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <script>
+            // Array yang nantinya akan di-replace
+            const items = [[items]]
+
+            const container = document.getElementById("items-container")
+            let total = 0
+
+            items.forEach((i) => {
+                const tr = document.createElement("tr")
+                tr.innerHTML = `
+                <td>${i.item}</td>
+                <td>${i.quantity}</td>
+                <td>Rp ${i.total.toLocaleString("id-ID")}</td>
+              `
+                container.appendChild(tr)
+                total += i.total
+            })
+
+            document.getElementById("total-harga").textContent = "Rp " + total.toLocaleString("id-ID")
+        </script>
+    </body>
+</html>

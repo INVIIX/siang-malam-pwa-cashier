@@ -1,12 +1,13 @@
-import { lazy } from "react";
+import { lazy } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
-import { ErrorPage } from "./components/commons/error-page.tsx";
-import AuthenticatedRoute from './modules/auth/components/context/authenticated-route.tsx'
-import GuestRoute from "./modules/auth/components/context/guest-route.tsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import { CartProvider } from "./modules/cart/components/context/cart-context.tsx";
-import { NotificationListener } from "./modules/notification/components/ui/notification-listener.tsx";
+import { ErrorPage } from "./components/commons/error-page.tsx"
+import AuthenticatedRoute from "./modules/auth/components/context/authenticated-route.tsx"
+import GuestRoute from "./modules/auth/components/context/guest-route.tsx"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "sonner"
+import { CartProvider } from "./modules/cart/components/context/cart-context.tsx"
+import { NotificationListener } from "./modules/notification/components/ui/notification-listener.tsx"
+import { LocalPrinterProvider } from "./modules/printer/components/context/local-printer-context.tsx"
 
 const AuthLayout = lazy(() => import("./components/layouts/auth/auth-layout.tsx"))
 const AppLayout = lazy(() => import("./components/layouts/app/app-layout.tsx"))
@@ -23,35 +24,44 @@ const InvoiceDetailPage = lazy(() => import("./modules/invoice/pages/invoice-det
 const queryClient = new QueryClient()
 
 export default function App() {
-    return <>
-        <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-                <CartProvider>
-                    <NotificationListener />
-                    <Routes>
-                        <Route element={<GuestRoute />}>
-                            <Route element={<AuthLayout />}>
-                                <Route path="register" element={<RegisterPage />} />
-                                <Route path="login" element={<LoginPage />} />
-                                <Route path="forgot-password" element={<ForgotPasswordPage />} />
-                                <Route path="reset-password" element={<ResetPasswordPage />} />
+    return (
+        <>
+            <QueryClientProvider client={queryClient}>
+                <BrowserRouter>
+                    <CartProvider>
+                        <NotificationListener />
+                        <Routes>
+                            <Route element={<GuestRoute />}>
+                                <Route element={<AuthLayout />}>
+                                    <Route path="register" element={<RegisterPage />} />
+                                    <Route path="login" element={<LoginPage />} />
+                                    <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                                    <Route path="reset-password" element={<ResetPasswordPage />} />
+                                </Route>
                             </Route>
-                        </Route>
-                        <Route element={<AuthenticatedRoute />}>
-                            <Route element={<AppLayout />}>
-                                <Route index element={<DashboardPage />} />
-                                <Route path="me" element={<AuthProfilePage />} />
-                                <Route path="cashier" element={<CashierPosPage />} />
-                                <Route path="invoices" element={<InvoiceIndexPage />} />
-                                <Route path="invoices/:invoiceId" element={<InvoiceDetailPage />} />
+                            <Route element={<AuthenticatedRoute />}>
+                                <Route element={<AppLayout />}>
+                                    <Route index element={<DashboardPage />} />
+                                    <Route path="me" element={<AuthProfilePage />} />
+                                    <Route
+                                        path="cashier"
+                                        element={
+                                            <LocalPrinterProvider>
+                                                <CashierPosPage />
+                                            </LocalPrinterProvider>
+                                        }
+                                    />
+                                    <Route path="invoices" element={<InvoiceIndexPage />} />
+                                    <Route path="invoices/:invoiceId" element={<InvoiceDetailPage />} />
+                                </Route>
+                                <Route path="cashier/display" element={<CashierDisplayPage />} />
                             </Route>
-                            <Route path="cashier/display" element={<CashierDisplayPage />} />
-                        </Route>
-                        <Route path="*" element={<ErrorPage />} />
-                    </Routes>
-                    <Toaster richColors position='top-center' />
-                </CartProvider>
-            </BrowserRouter>
-        </QueryClientProvider>
-    </>
+                            <Route path="*" element={<ErrorPage />} />
+                        </Routes>
+                        <Toaster richColors position="top-center" />
+                    </CartProvider>
+                </BrowserRouter>
+            </QueryClientProvider>
+        </>
+    )
 }
