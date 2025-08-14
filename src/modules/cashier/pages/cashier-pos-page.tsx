@@ -8,14 +8,8 @@ import { PlusCircleIcon, SearchIcon, XCircleIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { encodeReceipt, previewReceipt } from "@/modules/invoice/helpers/receipt-printer-text"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { previewReceipt } from "@/modules/invoice/helpers/receipt-printer-text"
 import { toast } from "sonner"
 import { errorValidation } from "@/lib/error-validation"
 import { AxiosError } from "axios"
@@ -26,10 +20,11 @@ import { z } from "zod/v4"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { InputCurrency } from "@/components/commons/input-currency"
 import { useAuth } from "@/modules/auth/components/context/auth-context"
-import { checkServiceStatus, printRaw, setCustomerDisplay } from "@/lib/apiClientAndroid"
+import { checkServiceStatus, setCustomerDisplay } from "@/lib/apiClientAndroid"
 import { generateIdleHtml, generateInvoiceHtml } from "@/lib/customerDisplay"
 import { makeQrSvg } from "@/lib/qr"
-import { TStatusResponse } from "@/types/android-api-resources"
+import { TStatusResponse, TPrinterDevice } from "@/types/android-api-resources"
+import { useLocalPrinter } from "@/modules/printer/components/context/local-printer-context"
 
 const paymentSchema = z.object({
     note: z.string(),
@@ -58,12 +53,13 @@ export type TFormPayment = {
 
 export default function CashierPosPage() {
     const { user } = useAuth()
+    const { loadPrinters, printReceipt, printers, selectedPrinter, selectPrinter } = useLocalPrinter()
 
     const [androidServiceActive, setAndroidServiceActive] = useState(false)
     const [invoice, setInvoice] = useState<TInvoice>()
     const [preview, setPreview] = useState<string | null>(null)
     const [search, setSearch] = useState<string>("")
-    
+
     const debouncedSearch = useDebounce(search, 300) // 500ms delay
     const invoicesQuery = useQuery<TInvoice[]>({
         queryKey: ["invoices", debouncedSearch],
@@ -110,12 +106,7 @@ export default function CashierPosPage() {
         const changeAmount = Math.max(totalPaid - invoiceTotal, 0)
         formPayment.setValue("change.amount", changeAmount)
 
-        if (invoice) {
-            var receiptPreview = previewReceipt(invoice)
-            setPreview(receiptPreview)
-        } else {
-            setPreview(null)
-        }
+        invoice ? setPreview(previewReceipt(invoice)) : setPreview(null)
     }, [invoice, watchedPayments, formPayment])
 
     async function checkAndroidService() {
@@ -152,6 +143,10 @@ export default function CashierPosPage() {
         console.log("Preview changed:", preview)
         displayPreviewToCustomer()
     }, [preview])
+
+    useEffect(() => {
+        loadPrinters()
+    }, [loadPrinters])
 
     async function displayPreviewToCustomer() {
         if (invoice && preview) {
@@ -192,18 +187,14 @@ export default function CashierPosPage() {
                 closeForm()
 
                 if (invoice) {
-                    let encodedReceipt: Object = encodeReceipt(
-                        invoice,
-                        user?.department?.name ?? "RM. Siang Malam",
-                        user?.branch?.name ?? "-"
-                    )
-                    let ESCPOSByteArray = Object.values(encodedReceipt)
-
                     try {
-                        printRaw(ESCPOSByteArray)
+                        await printReceipt(
+                            invoice,
+                            user?.department?.name ?? "RM. Siang Malam",
+                            user?.branch?.name ?? "-"
+                        )
                     } catch (error) {
                         console.error("Error printing receipt:", error)
-                        toast.error("Gagal mencetak nota")
                     }
                 }
             }
@@ -361,12 +352,40 @@ export default function CashierPosPage() {
                                                 />
                                             </div>
 
-                                            <div className="flex flex-col justify-end gap-2">
-                                                <ButtonSubmit
-                                                    loading={isSubmitting}
-                                                    children={"Konfirmasi Pembayaran"}
-                                                />
+                                            <div>
+                                                <div className="flex gap-2">
+                                                    <Select
+                                                        value={selectedPrinter?.deviceId || ""}
+                                                        onValueChange={(deviceId) => {
+                                                            const printer = printers.find(
+                                                                (p: TPrinterDevice) => p.deviceId === deviceId
+                                                            )
+                                                            if (printer) selectPrinter(printer)
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="basis-1/3">
+                                                            <SelectValue placeholder="Pilih Printer" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {printers.map((printer: TPrinterDevice) => (
+                                                                <SelectItem
+                                                                    key={printer.deviceId}
+                                                                    value={printer.deviceId}
+                                                                >
+                                                                    {printer.deviceName}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <ButtonSubmit
+                                                        className="flex-1"
+                                                        loading={isSubmitting}
+                                                        children={"Konfirmasi Pembayaran"}
+                                                    />
+                                                </div>
+
                                                 <Button
+                                                className="mt-2 w-full"
                                                     type="button"
                                                     variant="outline"
                                                     color="orange"

@@ -1,3 +1,4 @@
+import { TPrinterDevice, TPrintRawRequest } from "@/types/android-api-resources"
 import axios from "axios"
 
 const localhostApiClient = axios.create({
@@ -8,19 +9,21 @@ export function checkServiceStatus() {
     return localhostApiClient.get("/status")
 }
 
-export function printRaw(commands: number[]) {
-    return localhostApiClient.post(
-        "/printraw",
-        {
-            commands: commands,
-            deviceAddress: "",
+export function findPrinters(): Promise<TPrinterDevice[]> {
+    return localhostApiClient.get<TPrinterDevice[]>("/printer/find").then((response) => response.data)
+}
+
+export function printRaw(deviceId: string = "", commands: number[]) {
+    const requestBody: TPrintRawRequest = {
+        deviceId: deviceId,
+        commands: commands,
+    }
+
+    return localhostApiClient.post("/printraw", requestBody, {
+        headers: {
+            "Content-Type": "application/json",
         },
-        {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    )
+    })
 }
 
 export function setCustomerDisplay(html: string) {

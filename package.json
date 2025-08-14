@@ -6,10 +6,12 @@
     "scripts": {
         "dev": "vite --host=192.168.100.44",
         "dev:119": "vite --host=192.168.100.119",
+        "dev:21": "vite --host=192.168.100.21",
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "preview": "vite preview",
         "preview:119": "vite preview --host=192.168.100.119",
+        "preview:21": "vite preview --host=192.168.100.21",
         "report": "vite build --report",
         "generate-pwa-assets": "pwa-assets-generator --preset all public/logo.png"
     },
