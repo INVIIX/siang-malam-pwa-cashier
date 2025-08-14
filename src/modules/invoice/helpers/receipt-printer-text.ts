@@ -1,17 +1,17 @@
-import { money } from "@/lib/utils";
-import { TInvoice } from "@/modules/cart/helpers/cart-utils";
-import ReceiptEncoder from '@point-of-sale/receipt-printer-encoder';
-import moment from "moment";
+import { money } from "@/lib/utils"
+import { TInvoice } from "@/modules/cart/helpers/cart-utils"
+import ReceiptEncoder from "@point-of-sale/receipt-printer-encoder"
+import moment from "moment"
 
-type TAlign = 'left' | 'right' | 'center';
+type TAlign = "left" | "right" | "center"
 
-const LINE_WIDTH = 48;
-const NEWLINE = '\n';
-const textContent = (text: string | number, length: number, align: TAlign = 'left') => {
-    const str = String(text ?? '');
-    let result = '';
+const LINE_WIDTH = 48
+const NEWLINE = "\n"
+const textContent = (text: string | number, length: number, align: TAlign = "left") => {
+    const str = String(text ?? "")
+    let result = ""
     switch (align) {
-        case 'right':
+        case "right":
             result = str.padStart(length, " ")
             break;
         case 'center':
@@ -21,45 +21,71 @@ const textContent = (text: string | number, length: number, align: TAlign = 'lef
         case 'left':
         default:
             result = str.padEnd(length, " ")
-            break;
+            break
     }
     return result
 }
 
 
 export const previewReceipt = (invoice: TInvoice, storeName: string = "RM. Siang Malam", branchName: string = "-") => {
-    const tHead = [
-        [textContent('Items', 35), textContent('Total', 12, 'right')]
-    ].map((tr) => tr.join(' '));
+    const tHead = [[textContent("Items", 35), textContent("Total", 12, "right")]].map((tr) => tr.join(" "))
 
-    const tBody = invoice.transaction?.details ? invoice.transaction?.details.map((item) => {
-        return [textContent(item.quantity, 5, "right"), textContent(item.product, 29, 'left'), textContent(`${money(item.sub_total).replace("Rp", " ")}`, 12, 'right')]
-    }).map((tr) => tr.join(' ')) : [];
+    const tBody = invoice.transaction?.details
+        ? invoice.transaction?.details
+              .map((item) => {
+                  return [
+                      textContent(item.quantity, 5, "right"),
+                      textContent(item.product.name, 29, "left"),
+                      textContent(`${money(item.sub_total).replace("Rp", " ")}`, 12, "right"),
+                  ]
+              })
+              .map((tr) => tr.join(" "))
+        : []
 
-    const taxes = invoice?.transaction?.taxes ? invoice?.transaction?.taxes.map((tax) => {
-        return [textContent(`${tax.name} :`, 35, "right"), textContent(`${money(tax.amount).replace("Rp", " ")}`, 12, 'right')]
-    }).map((tr) => tr.join(' ')) : [];
+    const taxes = invoice?.transaction?.taxes
+        ? invoice?.transaction?.taxes
+              .map((tax) => {
+                  return [
+                      textContent(`${tax.name} :`, 35, "right"),
+                      textContent(`${money(tax.amount).replace("Rp", " ")}`, 12, "right"),
+                  ]
+              })
+              .map((tr) => tr.join(" "))
+        : []
 
     const tFoot = [
-        [textContent('Subtotal :', 35, "right"), textContent(`${money(invoice.amount).replace("Rp", " ")}`, 12, 'right')],
+        [
+            textContent("Subtotal :", 35, "right"),
+            textContent(`${money(invoice.amount).replace("Rp", " ")}`, 12, "right"),
+        ],
         ...[taxes],
         [textContent(` `, 20), "-".padStart(27, "-")],
-        [textContent('Total :', 35, "right"), textContent(`${money(invoice?.grand_total ?? 0).replace("Rp", " ")}`, 12, 'right')],
-    ].map((tr) => tr.join(' '));
+        [
+            textContent("Total :", 35, "right"),
+            textContent(`${money(invoice?.grand_total ?? 0).replace("Rp", " ")}`, 12, "right"),
+        ],
+    ].map((tr) => tr.join(" "))
 
     const header = [
         [textContent(`${storeName}`, LINE_WIDTH, "center")],
         [textContent(`${branchName}`, LINE_WIDTH, "center")],
         [" ".padStart(LINE_WIDTH, " ")],
-        [textContent('No', 8), textContent(':', 1), textContent(`${invoice.code}`, 37)],
-        [textContent('Meja', 8), textContent(':', 1), textContent(`${invoice.transaction?.table?.number ?? 'Bawa Pulang'}`, 37)],
-        [textContent('Tanggal', 8), textContent(':', 1), textContent(`${moment(invoice.issued).format('YYYY-MM-DD HH:mm')}`, 37)],
-    ].map((tr) => tr.join(' '));
+        [textContent("No", 8), textContent(":", 1), textContent(`${invoice.code}`, 37)],
+        [
+            textContent("Meja", 8),
+            textContent(":", 1),
+            textContent(`${invoice.transaction?.table?.number ?? "Bawa Pulang"}`, 37),
+        ],
+        [
+            textContent("Tanggal", 8),
+            textContent(":", 1),
+            textContent(`${moment(invoice.issued).format("YYYY-MM-DD HH:mm")}`, 37),
+        ],
+    ].map((tr) => tr.join(" "))
 
-    const footer = [
-        [" ".padStart(LINE_WIDTH, " ")],
-        [textContent('Terima Kasih', LINE_WIDTH, "center")],
-    ].map((tr) => tr.join(' '));
+    const footer = [[" ".padStart(LINE_WIDTH, " ")], [textContent("Terima Kasih", LINE_WIDTH, "center")]].map((tr) =>
+        tr.join(" ")
+    )
 
     return [
         ...header,
@@ -70,19 +96,19 @@ export const previewReceipt = (invoice: TInvoice, storeName: string = "RM. Siang
         ...["=".padStart(LINE_WIDTH, "=")],
         ...tFoot,
         ...[" ".padStart(LINE_WIDTH, " ")],
-        ...footer
+        ...footer,
     ].join(NEWLINE)
 }
 
 const encoder = new ReceiptEncoder({
     columns: LINE_WIDTH,
     feedBeforeCut: 4,
-});
+})
 
 export const encodeReceipt = (invoice: TInvoice, storeName: string = "RM. Siang Malam", branchName: string = "-") => {
-    const content = previewReceipt(invoice, storeName, branchName);
+    const content = previewReceipt(invoice, storeName, branchName)
     content.split(NEWLINE).map((row) => {
         encoder.line(row)
-    });
-    return encoder.cut().encode();
+    })
+    return encoder.cut().encode()
 }
