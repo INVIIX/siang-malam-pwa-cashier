@@ -1,6 +1,6 @@
 "use client"
 
-import { InvoiceDataTable } from "../ui/invoice-data-table";
+import { InvoiceDataTable } from "../components/ui/invoice-data-table";
 
 export default function InvoiceIndexPage() {
     return (

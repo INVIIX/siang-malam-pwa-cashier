@@ -1,15 +1,13 @@
-import { PosPayment, TPayment } from "./pos-payment";
-import { PosCart } from "./pos-cart";
 import { useCart } from "@/modules/cart/components/context/cart-context";
-import { useEffect, useState } from "react";
 import apiClient from "@/lib/apiClient";
 import { AxiosError } from "axios";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ProductCatalogue } from "@/modules/product/components/ui/product-catalogue";
 import { IProduct } from "@/modules/product/types/product";
-import { Cart, CartTableInfo } from "@/modules/cart/components/ui/cart";
-import { Payments } from "@/modules/payment/components/ui/payments";
+import { Cart } from "@/modules/cart/components/ui/cart";
+import { IPaymentHandle, Payments } from "@/modules/payment/components/ui/payments";
+import { TPayment } from "@/modules/payment/types/payment";
+import { useRef } from "react";
 
 type TSaleItem = {
     product_id: number;
@@ -22,13 +20,8 @@ type TSale = {
     items: TSaleItem[];
     methods: TPayment[];
 }
-const defaultSaleData: TSale = {
-    table_id: null,
-    direct_payment: true,
-    items: [],
-    methods: [],
-}
 export function PosRetail() {
+    const paymentRef = useRef<IPaymentHandle>(null);
     const { cart, addItem, clearItems } = useCart();
     const addProductToCart = (product: IProduct) => {
         addItem({
@@ -76,11 +69,12 @@ export function PosRetail() {
             submitSale(formData);
         }
     }
-    return (
+    
+    return <>
         <div className="grid lg:grid-cols-3 gap-4">
             <ProductCatalogue className="w-full h-[calc(100dvh-1rem)]" handleAction={addProductToCart} />
             <Cart className="w-full h-[calc(100dvh-1rem)]" />
-            <Payments billAmount={cart.grand_total} handlePayments={handlePayments} />
+            <Payments ref={paymentRef} billAmount={cart.grand_total} handlePayments={handlePayments} />
         </div>
-    )
+    </>
 }

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { TPayment } from "../../types/payment";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { money } from "@/lib/utils";
-import { Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "lucide-react";
 import {
     Select,
     SelectContent,
@@ -57,8 +57,15 @@ export function ChangeItem() {
     </>
 }
 
+export interface IPaymentProps {
+    billAmount: number,
+    handlePayments: (payments: TPayment[]) => void,
+}
+export interface IPaymentHandle {
+    clearPayments: () => void
+}
 
-export function Payments({ billAmount = 0, handlePayments }: { billAmount: number, handlePayments: (payments: TPayment[]) => void }) {
+export const Payments = forwardRef<IPaymentHandle, IPaymentProps>(({ billAmount, handlePayments }, ref) => {
     const [paymentAmount, setPaymentAmount] = useState<number>(0);
     const [changeAmount, setChangeAmount] = useState<number>(0);
 
@@ -75,14 +82,20 @@ export function Payments({ billAmount = 0, handlePayments }: { billAmount: numbe
     };
 
     const defaultVoucherItem = {
-        method: 'cash',
+        method: 'voucher',
         amount: 0,
-        note: 'Kembalian Penjualan'
+        note: ''
     };
 
     const [paymentItems, setPaymentItems] = useState<TPayment[]>([defaultPaymentItem]);
     const [changeItems, setChangeItems] = useState<TPayment[]>([defaultChangeItem]);
     const [voucherItems, setVoucherItems] = useState<TPayment[]>([defaultVoucherItem]);
+
+    const clearPayments = () => {
+        setPaymentItems([defaultPaymentItem]);
+        setChangeItems([defaultChangeItem]);
+        setVoucherItems([defaultVoucherItem]);
+    }
 
     const handleChange = (index: number, newValue: string) => {
         const updated = [...paymentItems];
@@ -112,7 +125,12 @@ export function Payments({ billAmount = 0, handlePayments }: { billAmount: numbe
     const submitPayments = () => {
         const allPayments = [...paymentItems, ...changeItems, ...voucherItems].filter((payment) => payment.amount !== 0);
         handlePayments(allPayments);
+
     }
+
+    useImperativeHandle(ref, () => ({
+        clearPayments,
+    }));
 
     return <>
         <div className="size-full flex flex-col gap-2 bg-white">
@@ -132,8 +150,8 @@ export function Payments({ billAmount = 0, handlePayments }: { billAmount: numbe
                         removePayment={removePayment}
                     />)
                 }
-                <Button variant="outline" onClick={addPayment}>
-                    Tambah baris pembayaran
+                <Button variant="ghost" onClick={addPayment}>
+                    <PlusIcon /> Tambah baris pembayaran
                 </Button>
                 <Button size="lg" onClick={submitPayments}>Bayar dan Cetak</Button>
             </div>
@@ -157,4 +175,4 @@ export function Payments({ billAmount = 0, handlePayments }: { billAmount: numbe
             </div>
         </div>
     </>
-}
+})

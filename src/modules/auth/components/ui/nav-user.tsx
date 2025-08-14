@@ -23,7 +23,7 @@ import {
 
 import { useAuth } from "../context/auth-context"
 import { NavLink } from "react-router"
-import { getInitialName } from "../../helpers/utils"
+import { getInitialName } from "../../lib/utils"
 
 export function NavUser() {
     const { user, logout } = useAuth();

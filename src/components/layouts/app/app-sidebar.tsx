@@ -11,6 +11,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { NavUser } from "@/modules/auth/components/ui/nav-user"
+import { NotificationSalesOrderBadge } from "@/modules/notification/components/ui/sales-orders-badge"
 import { HomeIcon, ReceiptTextIcon, ShoppingCartIcon } from "lucide-react"
 import { NavLink } from "react-router"
 
@@ -42,7 +43,8 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                                <SidebarMenuItem key={item.title} className="overflow-visible">
+                                    <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/4">{item.url == '/cashier' && <NotificationSalesOrderBadge />}</div>
                                     <SidebarMenuButton asChild>
                                         <NavLink to={item.url}>
                                             <item.icon />

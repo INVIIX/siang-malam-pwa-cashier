@@ -1,4 +1,4 @@
-import { lazy, useEffect } from "react";
+import { lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router"
 import { ErrorPage } from "./components/commons/error-page.tsx";
 import AuthenticatedRoute from './modules/auth/components/context/authenticated-route.tsx'
@@ -6,8 +6,7 @@ import GuestRoute from "./modules/auth/components/context/guest-route.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { CartProvider } from "./modules/cart/components/context/cart-context.tsx";
-import { echo } from "./lib/echo.ts";
-import { useAuth } from "./modules/auth/components/context/auth-context.tsx";
+import { NotificationListener } from "./modules/notification/components/ui/notification-listener.tsx";
 
 const AuthLayout = lazy(() => import('./components/layouts/auth/auth-layout.tsx'));
 const AppLayout = lazy(() => import('./components/layouts/app/app-layout.tsx'));
@@ -22,23 +21,13 @@ const CashierDisplayPage = lazy(() => import('./modules/cashier/pages/cashier-di
 const InvoiceIndexPage = lazy(() => import('./modules/invoice/pages/invoice-index-page.tsx'));
 const InvoiceDetailPage = lazy(() => import('./modules/invoice/pages/invoice-detail-page.tsx'));
 const queryClient = new QueryClient();
-export default function App() {
-    const { user } = useAuth()
-    const socket = echo;
 
-    useEffect(() => {
-        const channel = socket.channel(`sales.${user?.department.id}`);
-        channel.listen('SaleEvent', (e: any) => {
-            console.log(e)
-        });
-        return () => {
-            socket.leave(`sales`);
-        };
-    }, [socket])
+export default function App() {
     return <>
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <CartProvider>
+                    <NotificationListener />
                     <Routes>
                         <Route element={<GuestRoute />}>
                             <Route element={<AuthLayout />}>
