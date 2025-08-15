@@ -13,7 +13,7 @@ export function findPrinters(): Promise<TPrinterDevice[]> {
     return localhostApiClient.get<TPrinterDevice[]>("/printer/find").then((response) => response.data)
 }
 
-export function printRaw(deviceId: string = "", commands: number[]) {
+export function printRaw(commands: number[], deviceId: string = "") {
     const requestBody: TPrintRawRequest = {
         deviceId: deviceId,
         commands: commands,

@@ -170,7 +170,7 @@ export function InvoiceOrderTableInfo({
     ...props
 }: { invoice: IInvoice } & React.ComponentProps<"table">) {
     async function mDisplayOrderItems() {
-        return displayOrderItems(invoice.transaction?.details ?? [])
+        return displayOrderItems(invoice)
     }
 
     useEffect(() => {

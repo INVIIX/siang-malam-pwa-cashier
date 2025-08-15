@@ -43,14 +43,7 @@ export default function App() {
                                 <Route element={<AppLayout />}>
                                     <Route index element={<DashboardPage />} />
                                     <Route path="me" element={<AuthProfilePage />} />
-                                    <Route
-                                        path="cashier"
-                                        element={
-                                            <LocalPrinterProvider>
-                                                <CashierPosPage />
-                                            </LocalPrinterProvider>
-                                        }
-                                    />
+                                    <Route path="cashier" element={<CashierPosPage />} />
                                     <Route path="invoices" element={<InvoiceIndexPage />} />
                                     <Route path="invoices/:invoiceId" element={<InvoiceDetailPage />} />
                                 </Route>

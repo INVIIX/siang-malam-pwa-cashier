@@ -1,47 +1,61 @@
-import { useCart } from "@/modules/cart/components/context/cart-context";
-import apiClient from "@/lib/apiClient";
-import { AxiosError } from "axios";
-import { toast } from "sonner";
-import { ProductCatalogue } from "@/modules/product/components/ui/product-catalogue";
-import { IProduct } from "@/modules/product/types/product";
-import { Cart } from "@/modules/cart/components/ui/cart";
-import { IPaymentHandle, Payments } from "@/modules/payment/components/ui/payments";
-import { TPayment } from "@/modules/payment/types/payment";
-import { useRef } from "react";
+import { useCart } from "@/modules/cart/components/context/cart-context"
+import apiClient from "@/lib/apiClient"
+import { AxiosError } from "axios"
+import { toast } from "sonner"
+import { ProductCatalogue } from "@/modules/product/components/ui/product-catalogue"
+import { IProduct } from "@/modules/product/types/product"
+import { Cart } from "@/modules/cart/components/ui/cart"
+import { IPaymentHandle, Payments } from "@/modules/payment/components/ui/payments"
+import { TPayment } from "@/modules/payment/types/payment"
+import { useRef } from "react"
+import { printRetailReceipt } from "../../helpers/printer"
 
 type TSaleItem = {
-    product_id: number;
-    price: number;
-    quantity: number;
+    product_id: number
+    price: number
+    quantity: number
 }
-type TSale = {
-    table_id: null,
-    direct_payment: boolean;
-    items: TSaleItem[];
-    methods: TPayment[];
+export type TSale = {
+    table_id: null
+    direct_payment: boolean
+    items: TSaleItem[]
+    methods: TPayment[]
 }
+
 export function PosRetail() {
-    const paymentRef = useRef<IPaymentHandle>(null);
-    const { cart, addItem, clearItems } = useCart();
+    const paymentRef = useRef<IPaymentHandle>(null)
+    const { cart, addItem, clearItems } = useCart()
+
     const addProductToCart = (product: IProduct) => {
         addItem({
             ...product,
             ...{
                 product_id: product.id,
-                quantity: 1
-            }
+                quantity: 1,
+            },
         })
     }
+
+    const printReceipt = async (sale: TSale) => {
+        try {
+            await printRetailReceipt(sale)
+            toast.success("Receipt printed successfully")
+        } catch (error) {
+            console.error("Failed to print receipt", error)
+            toast.error("Failed to print receipt")
+        }
+    }
+
     const submitSale = async (formData: TSale) => {
         try {
-            const response = await apiClient.post('transactions', formData);
+            const response = await apiClient.post("transactions", formData)
             if (response.status == 200 || response.status == 201) {
-                clearItems();
+                clearItems()
             }
         } catch (err) {
-            const error = err as AxiosError;
-            const responseData: { message?: string } | any = error?.response?.data;
-            const errorMessage = responseData?.message ?? error?.message ?? 'Failed process';
+            const error = err as AxiosError
+            const responseData: { message?: string } | any = error?.response?.data
+            const errorMessage = responseData?.message ?? error?.message ?? "Failed process"
             toast.error(errorMessage)
         }
     }
@@ -54,27 +68,28 @@ export function PosRetail() {
                 return {
                     product_id: item.product_id,
                     quantity: item.quantity,
-                    price: item.default_price
+                    price: item.default_price,
                 }
             }),
-            methods: payments
+            methods: payments,
         }
         const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0)
         if (cart.grand_total <= 0) {
-            toast.error('Tidak ada tagihan untuk dibayarkan');
-        }
-        else if (cart.grand_total > totalPayments) {
-            toast.error('Nilai pembayaran kurang');
+            toast.error("Tidak ada tagihan untuk dibayarkan")
+        } else if (cart.grand_total > totalPayments) {
+            toast.error("Nilai pembayaran kurang")
         } else {
-            submitSale(formData);
+            submitSale(formData)
         }
     }
-    
-    return <>
-        <div className="grid lg:grid-cols-3 gap-4">
-            <ProductCatalogue className="w-full h-[calc(100dvh-1rem)]" handleAction={addProductToCart} />
-            <Cart className="w-full h-[calc(100dvh-1rem)]" />
-            <Payments ref={paymentRef} billAmount={cart.grand_total} handlePayments={handlePayments} />
-        </div>
-    </>
+
+    return (
+        <>
+            <div className="grid lg:grid-cols-3 gap-4">
+                <ProductCatalogue className="w-full h-[calc(100dvh-1rem)]" handleAction={addProductToCart} />
+                <Cart className="w-full h-[calc(100dvh-1rem)]" />
+                <Payments ref={paymentRef} billAmount={cart.grand_total} handlePayments={handlePayments} />
+            </div>
+        </>
+    )
 }

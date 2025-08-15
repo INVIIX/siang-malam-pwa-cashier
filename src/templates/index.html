@@ -1,11 +1,216 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Customer Display — Idle</title>
+        <style>
+            :root {
+                --bg1: #ffd9b2; /* light orange top */
+                --bg2: #fff6ea; /* very light bottom */
+                --card: #fff;
+                --ink: #222;
+                --muted: #6e6e6e;
+                --line: #eeddc9;
+                --accent: #ff7a00;
+                --radius: 16px;
+                --shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.05);
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+            }
+            body {
+                display: grid;
+                place-items: center;
+                background: linear-gradient(180deg, var(--bg1), var(--bg2));
+                color: var(--ink);
+                font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+            }
+            .stack {
+                display: grid;
+                gap: 18px;
+                place-items: center;
+                padding: 24px;
+            }
+            .logo {
+                width: 120px;
+                height: 120px;
+                border-radius: 999px;
+                overflow: hidden;
+                border: 3px solid rgba(255, 255, 255, 0.7);
+                box-shadow: var(--shadow);
+                background: #fff center/cover no-repeat;
+                /* Ganti URL logo di bawah */
+                background-image: url("[[logo]]");
+            }
+            .card {
+                width: min(92vw, 560px);
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                padding: 22px;
+            }
+            .title {
+                font-weight: 800;
+                font-size: clamp(20px, 3.4vw, 26px);
+                text-align: center;
+            }
+            .sub {
+                color: var(--muted);
+                text-align: center;
+                margin-top: 6px;
+                font-size: clamp(14px, 2.2vw, 16px);
+            }
+            .divider {
+                height: 1px;
+                background: var(--line);
+                margin: 16px 0;
+            }
+            .clock {
+                display: grid;
+                place-items: center;
+                gap: 6px;
+                padding: 8px 0 4px;
+            }
+            .time {
+                font-weight: 800;
+                letter-spacing: 1px;
+                font-variant-numeric: tabular-nums;
+                font-size: clamp(36px, 8vw, 56px);
+            }
+            .date {
+                color: var(--muted);
+                font-size: clamp(14px, 2.4vw, 16px);
+            }
+            .status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 8px;
+                color: #5c3b17;
+                background: #ffe8cf;
+                border: 1px solid #f7d5ad;
+                border-radius: 999px;
+                padding: 10px 14px;
+                font-weight: 600;
+            }
+            .pulse {
+                width: 10px;
+                height: 10px;
+                border-radius: 999px;
+                background: var(--accent);
+                box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.6);
+                animation: pulse 1.8s infinite;
+            }
+            @keyframes pulse {
+                to {
+                    box-shadow: 0 0 0 16px rgba(255, 122, 0, 0);
+                }
+            }
+            .tips {
+                display: grid;
+                gap: 8px;
+                margin-top: 10px;
+                color: var(--muted);
+                font-size: clamp(13px, 2.2vw, 15px);
+            }
+            .tips .item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 999px;
+                background: #ffd0a3;
+                border: 1px solid #ffb36b;
+            }
+            .footer {
+                margin-top: 14px;
+                text-align: center;
+                color: #9a8069;
+                font-size: 12px;
+            }
+            /* Hide cursor on dedicated display (optional) */
+            html,
+            body {
+                cursor: none;
+            }
+            /* Print */
+            @media print {
+                html,
+                body {
+                    cursor: auto;
+                }
+                .card {
+                    box-shadow: none;
+                }
+                body {
+                    background: #fff;
+                }
+            }
+        </style>
     </head>
     <body>
-        Rumah makan siang malam index customer display. edit at /src/templates/index.html
+        <div class="stack">
+            <div class="logo" title="Logo"></div>
+
+            <div class="card">
+                <div class="title">Customer Display</div>
+                <div class="sub">Layar akan menampilkan pesanan Anda saat transaksi berlangsung.</div>
+
+                <div class="divider"></div>
+
+                <div class="clock">
+                    <div class="time" id="time">00:00</div>
+                    <div class="date" id="date">-</div>
+                </div>
+
+                <div class="status"><span class="pulse"></span> Menunggu transaksi...</div>
+
+                <div class="tips">
+                    <div class="item">
+                        <span class="dot"></span> Pastikan nama menu & kuantitas sesuai saat ditampilkan.
+                    </div>
+                    <div class="item"><span class="dot"></span> Simpan struk pembayaran Anda.</div>
+                    <div class="item"><span class="dot"></span> Terima kasih sudah berkunjung!</div>
+                </div>
+
+                <div class="footer">© <span id="year"></span> RM Siang Malam</div>
+            </div>
+        </div>
+
+        <script>
+            // Ganti 'logo.png' dengan path/logo Anda. Bisa juga base64: document.querySelector('.logo').style.backgroundImage = "url('data:image/png;base64,...')"
+            const timeEl = document.getElementById("time")
+            const dateEl = document.getElementById("date")
+            const yearEl = document.getElementById("year")
+            const fmt = new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+            })
+            function pad(n) {
+                return String(n).padStart(2, "0")
+            }
+            function tick() {
+                const d = new Date()
+                timeEl.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes())
+                dateEl.textContent = fmt.format(d)
+                yearEl.textContent = d.getFullYear()
+            }
+            tick()
+            setInterval(tick, 15000) // update tiap 15 detik (hemat CPU)
+        </script>
     </body>
 </html>

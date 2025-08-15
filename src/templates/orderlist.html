@@ -1,66 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
-        <title>Daftar Pesanan</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Ringkasan Pesanan</title>
         <style>
+            :root {
+                --bg: #fff6ea;
+                --card: #fff;
+                --ink: #222;
+                --muted: #777;
+                --line: #f0dfc8;
+                --accent: #ff7a00;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html,
+            body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font: 16px/1.5 system-ui, Segoe UI, Roboto, Arial;
+            }
+            .wrap {
+                height: 100vh;
+                width: 100vw;
+                display: grid;
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 14px;
+                padding: 14px;
+            }
+            .card {
+                background: var(--card);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .head {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--line);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: #fff2e3;
+            }
+            .title {
+                font-weight: 700;
+                font-size: 1.2rem;
+            }
+            .sub {
+                color: var(--muted);
+                font-size: 0.95rem;
+            }
+            .chip {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 999px;
+                background: #ffe5c7;
+                margin-right: 6px;
+            }
             table {
                 width: 100%;
                 border-collapse: collapse;
             }
             th,
             td {
-                padding: 8px;
-                text-align: left;
+                padding: 12px 14px;
+                font-size: 1.05rem;
             }
-            th {
-                border-bottom: 1px solid #000;
+            thead th {
+                color: var(--muted);
+                border-bottom: 1px solid var(--line);
+                position: sticky;
+                top: 0;
+                background: #fff;
             }
-            tfoot td {
-                font-weight: bold;
+            tbody tr + tr td {
+                border-top: 1px dashed #efdfcf;
+            }
+            .qty {
+                width: 70px;
+                text-align: center;
+            }
+            .num {
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+            }
+            #order-card {
+                min-height: 0;
+            }
+            .list {
+                flex: 1;
+                min-height: 0;
+                overflow: auto;
+            }
+            .totals {
+                position: sticky;
+                bottom: 0;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), #fff);
+                border-top: 1px solid var(--line);
+                padding: 12px 16px;
+                display: grid;
+                gap: 8px;
+            }
+            .row {
+                display: flex;
+                justify-content: space-between;
+            }
+            .pay {
+                padding: 16px;
+                display: grid;
+                gap: 12px;
+                overflow: auto;
+            }
+            .qris {
+                border: 1px dashed #f2c89a;
+                border-radius: 10px;
+                padding: 12px;
+                background: #fff9f2;
+                display: grid;
+                gap: 10px;
+            }
+            #qris {
+                display: block;
+                width: 100%;
+                max-width: 320px;
+                margin: auto;
+                background: #fff;
+                border: 1px solid var(--line);
+                border-radius: 8px;
+                padding: 10px;
+            }
+            .amount {
+                font-weight: 800;
+                font-size: 1.35rem;
+                text-align: center;
+            }
+            .bank {
+                border-top: 1px solid var(--line);
+                padding-top: 10px;
+                display: grid;
+                gap: 8px;
+            }
+            .acc {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 10px;
+                border: 1px solid var(--line);
+                border-radius: 10px;
+                background: #fffdf9;
+            }
+            code {
+                background: #fff3e6;
+                padding: 2px 6px;
+                border-radius: 6px;
+            }
+            @media (max-width: 880px) {
+                .wrap {
+                    grid-template-columns: 1fr;
+                }
+            }
+            @media print {
+                .wrap {
+                    gap: 8px;
+                    padding: 0;
+                }
+                .card {
+                    border: none;
+                }
+                body {
+                    background: #fff;
+                }
             }
         </style>
     </head>
     <body>
-        <h3>Pesanan</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Items</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody id="items-container">
-                <!-- {{items}} -->
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="2">Total</td>
-                    <td id="total-harga"></td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="wrap">
+            <section class="card" id="order-card">
+                <div class="head">
+                    <div>
+                        <div class="title">Ringkasan Pesanan</div>
+                        <div class="sub">
+                            <span class="chip" id="chip-area">Area: [[area]]</span>
+                            <span class="chip" id="chip-table">Meja: [[meja]]</span>
+                            <span class="chip" id="chip-invoice">Invoice: [[invoice]]</span>
+                        </div>
+                    </div>
+                    <div class="sub" id="when">[[datetime]]</div>
+                </div>
+
+                <div class="list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="qty">Qty</th>
+                                <th class="num">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items"></tbody>
+                    </table>
+                </div>
+
+                <div class="totals">
+                    <div class="row"><span>Subtotal</span><span class="num" id="subtotal">Rp 0</span></div>
+                    <div class="row"><span class="sub">Pajak</span><span class="num" id="tax">Rp 0</span></div>
+                    <div class="row"><span>Total Tagihan</span><span class="num" id="grand">Rp 0</span></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="head">
+                    <div class="title">Pembayaran</div>
+                    <div class="sub">QRIS & Transfer</div>
+                </div>
+
+                <div class="pay">
+                    <div class="qris">
+                        <div class="sub">Invoice: <code id="inv">[[invoice]]</code></div>
+                        <img id="qris" alt="QRIS" />
+                        <div class="amount" id="amount">Rp 0</div>
+                    </div>
+
+                    <div class="bank" id="banks"><b>Alternatif Transfer</b></div>
+                </div>
+            </section>
+        </div>
 
         <script>
-            // Array yang nantinya akan di-replace
-            const items = [[items]]
+            const items = [[items]] // [{item, quantity, total}]
+            const transfers = [[transfers]] // [{bank, number, name}]
+            const grand = [[grand]]
+            const qris = `[[qris_base64]]` // base64 png string
+            const txt = (n) => "Rp " + (Number(n) || 0).toLocaleString("id-ID")
 
-            const container = document.getElementById("items-container")
-            let total = 0
-
-            items.forEach((i) => {
+            // items
+            const tbody = document.getElementById("items")
+            let sub = 0
+            ;(items || []).forEach((x) => {
+                sub += Number(x.total) || 0
                 const tr = document.createElement("tr")
-                tr.innerHTML = `
-                <td>${i.item}</td>
-                <td>${i.quantity}</td>
-                <td>Rp ${i.total.toLocaleString("id-ID")}</td>
-              `
-                container.appendChild(tr)
-                total += i.total
+                tr.innerHTML = `<td>${x.item}</td><td class="qty">${x.quantity}</td><td class="num">${txt(
+                    x.total
+                )}</td>`
+                tbody.appendChild(tr)
             })
 
-            document.getElementById("total-harga").textContent = "Rp " + total.toLocaleString("id-ID")
+            const tax = grand - sub
+
+            document.getElementById("subtotal").textContent = txt(sub)
+            document.getElementById("tax").textContent = txt(tax)
+            document.getElementById("grand").textContent = txt(grand)
+            document.getElementById("amount").textContent = txt(grand)
+
+            // meta
+            document.getElementById("inv").textContent = `[[invoice]]` || "-"
+            document.getElementById("chip-area").textContent = "Area: " + (`[[area]]` || "-")
+            document.getElementById("chip-table").textContent = "Meja: " + (`[[meja]]` || "-")
+            document.getElementById("chip-invoice").textContent = "Invoice: " + (`[[invoice]]` || "-")
+            document.getElementById("when").textContent = `[[datetime]]` || new Date().toLocaleString("id-ID")
+
+            // QRIS
+            const img = document.getElementById("qris")
+            if (qris && qris.trim() !== "") img.src = "data:image/png;base64," + qris.trim()
+
+            // transfer list
+            const banks = document.getElementById("banks")
+            ;(transfers || []).forEach((a) => {
+                const row = document.createElement("div")
+                row.className = "acc"
+                row.innerHTML = `<div><div class="bname"><b>${a.bank || "-"}</b></div><div>Atas Nama: <code>${
+                    a.name || "-"
+                }</code></div></div><div><code>${a.number || "-"}</code></div>`
+                banks.appendChild(row)
+            })
         </script>
     </body>
 </html>
